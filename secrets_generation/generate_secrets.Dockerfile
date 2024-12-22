@@ -2,10 +2,11 @@ FROM docker.io/eclipse-temurin:21-jre
 ARG UID
 ARG GID
 
-WORKDIR /pipeline-all-in-one
+WORKDIR /app
+
 COPY generate_secrets.sh .
 COPY generate_new_client_secret.sh .
-COPY misc/openssl-ca.cnf misc/openssl-ca.cnf
+COPY openssl-ca.cnf .
 
 RUN touch /.rnd && chown ${UID}:${GID} /.rnd
 USER ${UID}:${GID}

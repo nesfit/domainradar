@@ -4,7 +4,7 @@
 GENERATED_PASSWORDS_FILE="./generated_passwords"
 RANDOM_PASSWORD_LENGTH=32
 
-INFRA_DIR="./"
+source options.sh
 
 # --- Target infrastructure options ---
 
@@ -167,7 +167,34 @@ configure_sql() {
 
 # --- Setup process ---
 
+if [[ -d "$INFRA_TEMPLATE_DIR" ]]; then
+    if [[ -d "$INFRA_DIR" ]]; then
+        # Template backup found and installation exists already
+        # => it's only logical to remove the existing installation
+        echo "It seems that you have already executed the setup script."
+        if ask_yes_no "Remove the existing installation and start anew?"; then
+            rm -rf "$INFRA_DIR"
+            cp -r "$INFRA_TEMPLATE_DIR" "$INFRA_DIR"
+        else
+            exit 1
+        fi
+    else
+        # Template backup found but no installation exists
+        # => just copy the template
+        cp -r "$INFRA_TEMPLATE_DIR" "$INFRA_DIR"
+    fi
+else
+    # No installation done yet => backup the "infra" directory as a template
+    cp -r "$INFRA_DIR" "$INFRA_TEMPLATE_DIR"
+fi
+
 fill_passwords
 check_properties
 replace_placeholders "$INFRA_DIR"
 configure_sql
+
+cd secrets_generation || exit 1
+./generate_secrets_docker.sh
+cd ..
+
+./build_images.sh

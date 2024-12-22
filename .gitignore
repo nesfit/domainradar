@@ -1,4 +1,7 @@
 secrets/
-dockerfiles/image_build
 .vscode/
 generated_passwords
+colext/
+infra/
+input/
+ui/
