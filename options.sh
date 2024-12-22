@@ -5,7 +5,7 @@ COLEXT_DIR="./colext"
 WEBUI_DIR="./ui"
 CLF_DIR="./colext/python_pipeline/domainradar-clf"
 
-INFRA_BRANCH="rework"
+INFRA_BRANCH="main"
 LOADER_BRANCH="main"
 COLEXT_BRANCH="main"
 WEBUI_BRANCH="main"
