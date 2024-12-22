@@ -11,7 +11,7 @@ CLIENT_CERT_VALIDITY_DAYS=365
 CA_PASSWORD="$$PASS_CA$$"
 TRUSTSTORE_PASSWORD="$$PASS_TRUSTSTORE$$"
 
-NUM_CLIENTS=7
+NUM_CLIENTS=11
 NUM_BROKERS=4
 
 CLIENT_NAMES=("classifier-unit" "config-manager" "collector" "extractor" "kafka-connect" "initializer" "kafka-ui" "merger" "loader" "webui" "admin")
