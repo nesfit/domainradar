@@ -162,7 +162,7 @@ configure_sql() {
     if [[ $STORE_RAW_DATA_IN_POSTGRES == "0" ]]; then
         file=$(find "$INFRA_DIR" -type f -name "10_create_domainradar_db.sql" | head -n 1)
         echo "Reconfiguring database init script $file"
-        sed -i '/\s*-- \$\$\$/,/\s*-- \$\$\$/ s/v_deserialized_data/NULL/g' "$file"
+        sed -i '/\s*_template_start_/,/\s*_template_end_/ s/v_deserialized_data/NULL/g' "$file"
     fi
 }
 
