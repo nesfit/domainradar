@@ -27,6 +27,7 @@ declare -A config_options=(
     # Misc
     ["DNS_RESOLVERS"]="\"195.113.144.194\", \"195.113.144.233\""
     ["ID_PREFIX"]="domrad"
+    ["COMPOSE_BASE_NAME"]="domainradar"
     # Compose scaling
     ["COLLECTORS_PY_SCALE"]="5"
     ["COLLECTORS_JAVA_CPC_SCALE"]="1"
@@ -166,6 +167,20 @@ configure_sql() {
     fi
 }
 
+make_log4j_configs() {
+    local dir="$INFRA_DIR/client_properties"
+    local template="$dir/log4j2_template.xml"
+    local services=(geo_asn nerd tls)
+
+    for service in "${services[@]}"
+    do
+        target="$dir/log4j2-$service.xml"
+        cp "$template" "$target"
+        replace "$target" "LOG4J-ID" "collector"
+        replace "$target" "LOG4J-PASSWORD" "${passwords[PASS_KEY_COLLECTOR]}"
+    done
+}
+
 # --- Setup process ---
 
 if [[ -d "$INFRA_TEMPLATE_DIR" ]]; then
@@ -197,6 +212,8 @@ fill_passwords
 check_properties
 # Replace placeholders in infra
 replace_placeholders "$INFRA_DIR"
+# Create log4j2 configurations for Java-based collectors
+make_log4j_configs
 # If STORE_RAW_DATA_IN_POSTGRES is 0, modify the SQL init script in infra
 configure_sql
 
