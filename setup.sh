@@ -5,6 +5,7 @@ GENERATED_PASSWORDS_FILE="./generated_passwords"
 RANDOM_PASSWORD_LENGTH=32
 
 source options.sh
+SECRETS_GENERATION_DIR="./secrets_generation"
 
 # --- Target infrastructure options ---
 
@@ -34,7 +35,7 @@ declare -A config_options=(
     ["FLINK_TASKMANAGER_SCALE"]="1"
     # Internal - do not modify
     ["BROKER_PUBLIC_HOSTNAME"]="$BROKER_PUBLIC_HOSTNAME"
-    ["KAFKA_PUBLIC_HOSTNAME"]="${BROKER_PUBLIC_HOSTNAME/%/1}"
+    ["KAFKA_PUBLIC_HOSTNAME"]="${BROKER_PUBLIC_HOSTNAME/\%/1}"
 )
 
 # Passwords for private keys, keystores and database users
@@ -188,13 +189,30 @@ else
     cp -r "$INFRA_DIR" "$INFRA_TEMPLATE_DIR"
 fi
 
+working_dir="$PWD"
+
+# Create random passwords for those that have not been explicitly set in $passwords
 fill_passwords
+# Check if all properties are configured
 check_properties
+# Replace placeholders in infra
 replace_placeholders "$INFRA_DIR"
+# If STORE_RAW_DATA_IN_POSTGRES is 0, modify the SQL init script in infra
 configure_sql
 
-cd secrets_generation || exit 1
+# Backup the secrets generation directory
+cp -r "$SECRETS_GENERATION_DIR" "$working_dir/_bck_secrets_gen"
+# Replace placeholders in the generate_secrets.sh script
+replace_placeholders "$SECRETS_GENERATION_DIR"
+# Run the script
+cd "$SECRETS_GENERATION_DIR" || exit 1
 ./generate_secrets_docker.sh
-cd ..
+cd "$working_dir"
+# Move the newly generated secrets to infra
+mv "$SECRETS_GENERATION_DIR/secrets" "$INFRA_DIR/secrets"
+# Restore the backup of the secrets generation directory
+rm -rf "$SECRETS_GENERATION_DIR"
+mv "$working_dir/_bck_secrets_gen" "$SECRETS_GENERATION_DIR"
 
+# Build container images
 ./build_images.sh

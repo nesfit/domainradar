@@ -52,7 +52,7 @@ for ((i=1; i <= NUM_BROKERS; i++)); do
     echo "----------------------------"
     echo "Processing broker kafka$i..."
 
-    ext="SAN=DNS:kafka$i,DNS:${BROKER_PUBLIC_HOSTNAME/%/$i},DNS:localhost,IP:127.0.0.1,IP:${BROKER_IPS_INTERNAL[$i-1]},IP:${BROKER_IPS_EXTERNAL[$i-1]}"
+    ext="SAN=DNS:kafka$i,DNS:${BROKER_PUBLIC_HOSTNAME/\%/$i},DNS:localhost,IP:127.0.0.1,IP:${BROKER_IPS_INTERNAL[$i-1]},IP:${BROKER_IPS_EXTERNAL[$i-1]}"
 
     keytool -keystore kafka$i.keystore.jks -alias kafka$i -validity $BROKER_KEY_VALIDITY_DAYS \
         -genkey -keyalg RSA \
@@ -104,11 +104,10 @@ for ((i=1; i <= NUM_CLIENTS; i++)); do
     keytool -importkeystore -srckeystore "$name.keystore.jks" -srcstorepass "$CLIENT_PASSWORD" -destkeystore "$name.keystore.p12" -deststoretype PKCS12 -deststorepass "$CLIENT_PASSWORD"
     openssl pkcs12 -in "$name.keystore.p12" -nocerts -out "$name-priv-key.pem" -passin "pass:$CLIENT_PASSWORD" -passout "pass:$CLIENT_PASSWORD"
     rm "$name.keystore.p12"
-
-    echo "$CLIENT_PASSWORD" > "secrets_$name/key-password.txt"
-
     rm ./*.csr
+
     mkdir -p "secrets_$name"
+    echo "$CLIENT_PASSWORD" > "secrets_$name/key-password.txt"
     mv $name* "secrets_$name/"
 done
 

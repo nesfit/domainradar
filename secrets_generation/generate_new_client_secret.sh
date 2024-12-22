@@ -41,11 +41,10 @@ keytool -keystore "$CLIENT_ID.keystore.jks" -alias "$CLIENT_ID" -import -file "$
 keytool -importkeystore -srckeystore "$CLIENT_ID.keystore.jks" -srcstorepass "$CLIENT_PASSWORD" -destkeystore "$CLIENT_ID.keystore.p12" -deststoretype PKCS12 -deststorepass "$CLIENT_PASSWORD"
 openssl pkcs12 -in "$CLIENT_ID.keystore.p12" -nocerts -out "$CLIENT_ID-priv-key.pem" -passin "pass:$CLIENT_PASSWORD" -passout "pass:$CLIENT_PASSWORD"
 rm "$CLIENT_ID.keystore.p12"
-
 rm ./*.csr
-mkdir -p "secrets_$CLIENT_ID"
-mv "$CLIENT_ID"* "secrets_$CLIENT_ID/"
 
+mkdir -p "secrets_$CLIENT_ID"
 echo "$CLIENT_PASSWORD" > "secrets_$name/key-password.txt"
+mv "$CLIENT_ID"* "secrets_$CLIENT_ID/"
 
 echo "Generated client private key and certificate for $CLIENT_ID."
