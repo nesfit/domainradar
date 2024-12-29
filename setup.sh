@@ -43,12 +43,27 @@ declare -A config_options=(
     # An identifier for the Compose instance.
     ["COMPOSE_BASE_NAME"]="domainradar"
     
-    # -> Docker Compose scaling (number of component instances to run) <-
+    # -> Scaling options (number of component instances to run) <-
     ["COLLECTORS_PY_SCALE"]="5"
     ["COLLECTORS_JAVA_CPC_SCALE"]="1"
     ["EXTRACTOR_SCALE"]="2"
     ["CLASSIFIER_SCALE"]="1"
+    # We recommend keeping the scale (number of Docker services) at 1 and increasing
+    # the parallelism (number of task slots) to match MAX_PARALLELISM_MERGER
     ["FLINK_TASKMANAGER_SCALE"]="1"
+    ["FLINK_PARALLELISM"]="5"
+
+    # -> Kafka partitioning <-
+    # These options control the number of partitions set for the Kafka topics used by
+    # the pipeline. This effectively controls the maximum number of simultaneously
+    # processing instances of the pipeline components. If any of the scaling options
+    # above is set to a higher value than the corresponding entry here, the added
+    # instances will idle and only take over in case of a failure.
+    ["MAX_PARALLELISM_DN_COLLECTORS"]="20"
+    ["MAX_PARALLELISM_IP_COLLECTORS"]="20"
+    ["MAX_PARALLELISM_MERGER"]="5"
+    ["MAX_PARALLELISM_EXTRACTOR"]="10"
+    ["MAX_PARALLELISM_CLASSIFIER"]="5"
 )
 
 # Passwords for private keys, keystores and database users.
