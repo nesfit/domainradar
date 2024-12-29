@@ -13,6 +13,7 @@ CLF_BRANCH="main"
 
 if podman -v >/dev/null 2>&1 || (docker -v 2>/dev/null | grep -q 'podman'); then
   DOCKER="podman"
+  echo "Warning: podman is not supported yet. You may encounter issues, especially on SELinux-enabled systems."
 elif docker -v >/dev/null 2>&1; then
   DOCKER="docker"
 else
