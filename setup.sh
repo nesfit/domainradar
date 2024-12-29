@@ -71,9 +71,20 @@ declare -A passwords=(
 
 # --- Setup functions ---
 
+if [[ "$@" =~ "-y" ]]; then
+  INTERACTIVE=true
+else
+  INTERACTIVE=false
+fi
+
 ask_yes_no() {
     local prompt="$1"
     local reply
+
+    if $INTERACTIVE; then
+        echo "$prompt y"
+        return 0
+    fi
 
     while true; do
         read -r -p "$prompt [y/N]: " reply
