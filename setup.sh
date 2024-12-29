@@ -108,6 +108,11 @@ else
   INTERACTIVE=false
 fi
 
+stop_on_error() {
+    echo "Stopping"
+    exit 1
+}
+
 ask_yes_no() {
     local prompt="$1"
     local reply
@@ -142,8 +147,7 @@ fill_passwords() {
         if ask_yes_no "A passwords file already exists. Overwrite?"; then
             rm "$USED_PASSWORDS_FILE"
         else
-            echo "Terminating"
-            exit 1
+            stop_on_error
         fi
     fi
 
@@ -154,6 +158,8 @@ fill_passwords() {
 
         printf "$key\t${passwords[$key]}\n" >> "$USED_PASSWORDS_FILE"
     done
+
+    echo "$USED_PASSWORDS_FILE file written."
 }
 
 is_valid_target() {
@@ -166,11 +172,20 @@ is_valid_target() {
 }
 
 check_properties() {
+    has_empty=false
+
     for key in "${!config_options[@]}"; do
         if [[ -z ${config_options[$key]} ]]; then
             echo "Warning: property $key is empty!" 1>&2
+            has_empty=true
         fi
     done
+
+    if $has_empty; then
+        if ! ask_yes_no "Empty options found. Continue?"; then
+            stop_on_error
+        fi
+    fi
 }
 
 replace() {
@@ -219,6 +234,7 @@ make_log4j_configs() {
         target="$dir/log4j2-$service.xml"
         cp "$template" "$target"
         replace "$target" "LOG4J-ID" "collector"
+        replace "$target" "LOG4J-KEY" "$service"
         replace "$target" "LOG4J-PASSWORD" "${passwords[PASS_KEY_COLLECTOR]}"
     done
 }
@@ -233,8 +249,9 @@ if [[ -d "$INFRA_TEMPLATE_DIR" ]]; then
         if ask_yes_no "Remove the existing installation and start anew?"; then
             rm -rf "$INFRA_DIR"
             cp -r "$INFRA_TEMPLATE_DIR" "$INFRA_DIR"
+            echo "Removed previous installation."
         else
-            exit 1
+            stop_on_error
         fi
     else
         # Template backup found but no installation exists
