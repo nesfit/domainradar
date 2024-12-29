@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 
-# --- Setup script options ---
-GENERATED_PASSWORDS_FILE="./generated_passwords"
-RANDOM_PASSWORD_LENGTH=32
-
 source options.sh
+
+########################################################################################
+
+# --- Setup script options ---
+
+USED_PASSWORDS_FILE="./used_passwords"
+RANDOM_PASSWORD_LENGTH=32
 SECRETS_GENERATION_DIR="./secrets_generation"
 
 # --- Target infrastructure options ---
@@ -16,13 +19,15 @@ BROKER_PUBLIC_HOSTNAME="kafka%.example.com"
 
 declare -A config_options=( 
     # -> Collector options <-
-    # An API token for CESNET's NERD. Leave empty to disable NERD (i.e. the collector will run but produce empty responses).
+    # An API token for CESNET's NERD. Leave empty to disable NERD (i.e. the collector 
+    # will run but produce empty responses).
     ["NERD_TOKEN"]=""
     
     # -> DomainRadar Web UI <-
     ["WEBUI_ADMIN_USERNAME"]="admin"
     ["WEBUI_ADMIN_PASSWORD"]="please-change-me"
-    # The hostname through which the WebUI will be accessed (used as the allowed CORS origin).
+    # The hostname through which the WebUI will be accessed
+    # (used as the allowed CORS origin).
     ["WEBUI_PUBLIC_HOSTNAME"]="localhost"
     
     # -> Kafbat UI for Apache Kafka <-
@@ -30,7 +35,8 @@ declare -A config_options=(
     ["KAFBATUI_ADMIN_PASSWORD"]="please-change-me"
     
     # -> Miscellaneous <-
-    # IPs of DNS recursive resolvers to use for initial DNS scans. Format as: "\"1.2.3.4\", \"5.6.7.8\"" etc.
+    # IPs of DNS recursive resolvers to use for initial DNS scans.
+    # Format as: "\"1.2.3.4\", \"5.6.7.8\"" etc.
     ["DNS_RESOLVERS"]="\"195.113.144.194\", \"195.113.144.233\""
     # A common prefix for the Kafka clients' group ID.
     ["ID_PREFIX"]="domrad"
@@ -45,7 +51,9 @@ declare -A config_options=(
     ["FLINK_TASKMANAGER_SCALE"]="1"
 )
 
-# Passwords for private keys, keystores and database users
+# Passwords for private keys, keystores and database users.
+# When left blank, the password will be randomly generated.
+# All passwords will be stored in USED_PASSWORDS_FILE.
 declare -A passwords=(
     ["PASS_CA"]=""
     ["PASS_TRUSTSTORE"]=""
@@ -74,6 +82,8 @@ declare -A passwords=(
     # Web UI: cookie encryption secret
     ["WEBUI_NUXT_SECRET"]=""  
 )
+
+########################################################################################
 
 # --- Setup functions ---
 
@@ -113,9 +123,9 @@ generate_random_password() {
 }
 
 fill_passwords() {
-    if [[ -f "$GENERATED_PASSWORDS_FILE" ]]; then
+    if [[ -f "$USED_PASSWORDS_FILE" ]]; then
         if ask_yes_no "A passwords file already exists. Overwrite?"; then
-            rm "$GENERATED_PASSWORDS_FILE"
+            rm "$USED_PASSWORDS_FILE"
         else
             echo "Terminating"
             exit 1
@@ -127,7 +137,7 @@ fill_passwords() {
             passwords["$key"]="$(generate_random_password)"
         fi
 
-        printf "$key\t${passwords[$key]}\n" >> "$GENERATED_PASSWORDS_FILE"
+        printf "$key\t${passwords[$key]}\n" >> "$USED_PASSWORDS_FILE"
     done
 }
 
