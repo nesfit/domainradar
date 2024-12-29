@@ -3,7 +3,7 @@
 source options.sh
 
 echo "Building the domrad/loader image"
-$DOCKER build -t domrad/loader -f dockerfiles/prefilter.Dockerfile .
+$DOCKER build -t domrad/loader -f- "$LOADER_DIR" < dockerfiles/prefilter.Dockerfile
 
 echo "Building the domrad/webui image"
 cd "$WEBUI_DIR" || exit 1

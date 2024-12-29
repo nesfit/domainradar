@@ -1,5 +1,3 @@
-ARG SRC_DIR=input
-
 FROM docker.io/python:3.11-alpine AS python-base
 
 ENV PYTHONUNBUFFERED=1 \
@@ -37,22 +35,20 @@ RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
     curl -sSL https://install.python-poetry.org | python3 -
 
 FROM builder AS deps
-ARG SRC_DIR
 
 # Copy project requirement files here to ensure they will be cached
 WORKDIR $PYSETUP_PATH
 
-COPY ./${SRC_DIR}/poetry.lock ./${SRC_DIR}/pyproject.toml ./
+COPY ./poetry.lock ./pyproject.toml ./
 
 # Install runtime deps (uses $POETRY_VIRTUALENVS_IN_PROJECT internally)
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
     poetry install --without=dev
 
 FROM builder AS production
-ARG SRC_DIR
 
 COPY --from=deps $PYSETUP_PATH $PYSETUP_PATH
-COPY ./${SRC_DIR}/ /app/
+COPY ./ /app/
 WORKDIR /app
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
     poetry install
