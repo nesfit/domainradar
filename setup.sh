@@ -15,20 +15,29 @@ STORE_RAW_DATA_IN_POSTGRES=0
 BROKER_PUBLIC_HOSTNAME="kafka%.example.com"
 
 declare -A config_options=( 
-    # Collector options
-    ["NERD_TOKEN"]="123456789"
-    # DomainRadar Web UI
+    # -> Collector options <-
+    # An API token for CESNET's NERD. Leave empty to disable NERD (i.e. the collector will run but produce empty responses).
+    ["NERD_TOKEN"]=""
+    
+    # -> DomainRadar Web UI <-
     ["WEBUI_ADMIN_USERNAME"]="admin"
     ["WEBUI_ADMIN_PASSWORD"]="please-change-me"
+    # The hostname through which the WebUI will be accessed (used as the allowed CORS origin).
     ["WEBUI_PUBLIC_HOSTNAME"]="localhost"
-    # Kafbat UI for Apache Kafka
+    
+    # -> Kafbat UI for Apache Kafka <-
     ["KAFBATUI_ADMIN_USERNAME"]="admin"
     ["KAFBATUI_ADMIN_PASSWORD"]="please-change-me"
-    # Misc
+    
+    # -> Miscellaneous <-
+    # IPs of DNS recursive resolvers to use for initial DNS scans. Format as: "\"1.2.3.4\", \"5.6.7.8\"" etc.
     ["DNS_RESOLVERS"]="\"195.113.144.194\", \"195.113.144.233\""
+    # A common prefix for the Kafka clients' group ID.
     ["ID_PREFIX"]="domrad"
+    # An identifier for the Compose instance.
     ["COMPOSE_BASE_NAME"]="domainradar"
-    # Compose scaling
+    
+    # -> Docker Compose scaling (number of component instances to run) <-
     ["COLLECTORS_PY_SCALE"]="5"
     ["COLLECTORS_JAVA_CPC_SCALE"]="1"
     ["EXTRACTOR_SCALE"]="2"
