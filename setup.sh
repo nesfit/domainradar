@@ -34,9 +34,6 @@ declare -A config_options=(
     ["EXTRACTOR_SCALE"]="2"
     ["CLASSIFIER_SCALE"]="1"
     ["FLINK_TASKMANAGER_SCALE"]="1"
-    # Internal - do not modify
-    ["BROKER_PUBLIC_HOSTNAME"]="$BROKER_PUBLIC_HOSTNAME"
-    ["KAFKA_PUBLIC_HOSTNAME"]="${BROKER_PUBLIC_HOSTNAME/\%/1}"
 )
 
 # Passwords for private keys, keystores and database users
@@ -219,6 +216,9 @@ working_dir="$PWD"
 
 # Create random passwords for those that have not been explicitly set in $passwords
 fill_passwords
+# Set the internal placeholders according to the target infrastructure options
+config_options["BROKER_PUBLIC_HOSTNAME"]="$BROKER_PUBLIC_HOSTNAME"
+config_options["KAFKA_PUBLIC_HOSTNAME"]="${BROKER_PUBLIC_HOSTNAME/\%/1}"
 # Check if all properties are configured
 check_properties
 # Replace placeholders in infra
