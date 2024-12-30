@@ -22,6 +22,10 @@ declare -A config_options=(
     # An API token for CESNET's NERD. Leave empty to disable NERD (i.e. the collector 
     # will run but produce empty responses).
     ["NERD_TOKEN"]=""
+    # URL and token for the QRadar RESTful API. Leave the URL empty to disable QRadar
+    # (i.e. the collector will run but not consume requests).
+    ["QRADAR_URL"]=""
+    ["QRADAR_TOKEN"]=""
     
     # -> DomainRadar Web UI <-
     ["WEBUI_ADMIN_USERNAME"]="admin"
