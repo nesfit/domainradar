@@ -170,7 +170,7 @@ is_valid_target() {
     local filename="$1"
     local ext="${filename##*.}"
     case "$ext" in
-        sh|secret|conf|toml|xml|properties|env|yml) return 0 ;;
+        sh|secret|conf|toml|xml|properties|env|yml|template) return 0 ;;
         *) return 1 ;;
     esac
 }
