@@ -2,7 +2,7 @@ INFRA_DIR="../infra"
 INFRA_TEMPLATE_DIR="./_infra-template"
 LOADER_DIR="../input"
 COLEXT_DIR="../colext"
-WEBUI_DIR="../ui"
+WEBUI_DIR="../webui"
 CLF_DIR="../colext/python_pipeline/domainradar-clf"
 
 INFRA_BRANCH="main"
