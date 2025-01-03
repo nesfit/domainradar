@@ -293,6 +293,9 @@ cd "$SECRETS_GENERATION_DIR" || exit 1
 cd "$working_dir"
 # Move the newly generated secrets to infra
 mv "$SECRETS_GENERATION_DIR/secrets" "$INFRA_DIR/secrets"
+# Copy the CA certificate to the loader and webui secerts dirs because they expect them at a fixed location
+cp "$INFRA_DIR/secrets/ca/ca-cert" "$INFRA_DIR/secrets/secrets_loader/ca-cert.pem"
+cp "$INFRA_DIR/secrets/ca/ca-cert" "$INFRA_DIR/secrets/secrets_webui/ca-cert.pem"
 # Restore the backup of the secrets generation directory
 rm -rf "$SECRETS_GENERATION_DIR"
 mv "$working_dir/_bck_secrets_gen" "$SECRETS_GENERATION_DIR"
