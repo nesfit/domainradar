@@ -2,19 +2,32 @@
 
 source options.sh
 
-clone_or_pull() {
-  if [ -d "$1" ]; then
-    echo "Pulling latest $2"
-    cd "$1" || exit 1
+CLEAR_GIT_FILES=$([ "$1" = "--clear-git-files" ] && echo true || echo false)
 
-    git fetch --all
-    git checkout "$3"
-    git merge --ff-only
-    cd ..
-  else
-    echo Cloning "$2"
-    git clone --filter=blob:none -b "$3" "git@github.com:nesfit/$2.git" "$1"
-  fi
+clone_or_pull() {
+    local target_dir="$1"
+    local repo="$2"
+    local branch="$3"
+    local working_dir="$PWD"
+
+    if [ -d "$target_dir" ]; then
+        echo "Pulling latest $repo"
+        cd "$target_dir" || exit 1
+
+        git fetch --all
+        git checkout "$branch"
+        git merge --ff-only
+        cd "$working_dir"
+    else
+        echo Cloning "$repo"
+        git clone --filter=blob:none -b "$branch" "git@github.com:nesfit/$repo.git" "$target_dir"
+
+        if $CLEAR_GIT_FILES; then
+            cd "$target_dir"
+            rm -rf ".git"
+            cd "$working_dir"
+        fi
+    fi
 }
 
 check_git_lfs() {
