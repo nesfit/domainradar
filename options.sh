@@ -3,7 +3,7 @@ INFRA_TEMPLATE_DIR="./_infra-template"
 LOADER_DIR="../input"
 COLEXT_DIR="../colext"
 WEBUI_DIR="../webui"
-CLF_DIR="../colext/python_pipeline/classifiers"
+CLF_DIR="../colext/python/classifiers"
 
 INFRA_BRANCH="main"
 LOADER_BRANCH="main"
