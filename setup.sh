@@ -300,5 +300,9 @@ cp "$INFRA_DIR/secrets/ca/ca-cert" "$INFRA_DIR/secrets/secrets_webui/ca-cert.pem
 rm -rf "$SECRETS_GENERATION_DIR"
 mv "$working_dir/_bck_secrets_gen" "$SECRETS_GENERATION_DIR"
 
+# Copy the config_manager host socket script
+cp "$COLEXT_DIR/python/config_manager/config_manager_daemon.py" "$INFRA_DIR/config-manager-daemon.py"
+chmod +x $INFRA_DIR/config-manager-daemon.py
+
 # Build container images
 ./build_images.sh
