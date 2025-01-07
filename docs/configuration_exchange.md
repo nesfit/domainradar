@@ -62,13 +62,13 @@ The available component IDs are:
 - collector-dns
 - collector-tls
 - collector-nerd
-- collector-geoip
+- collector-geo-asn
 - collector-rdap-dn
 - collector-rdap-ip
 - collector-rtt
-- merger
+- fl-taskmanager (corresponds to the Data Merger configuration)
 - extractor
-- classifier-unit
+- classifier
 
 ## Configuration format (loader)
 
@@ -125,7 +125,7 @@ The configuration exchange JSON for the loader looks like this:
 
 ## Configuration format (Java-based data pipeline components)
 
-For the pipeline components implemented in Java (stages marked by _KS_ or _PC_ in [kafka-pipeline.pdf](img/kafka-pipeline.pdf)), the configuration exchange JSON will be transformed into the Java Properties file accepted by the components. See the [**definition**](https://github.com/nesfit/domainradar-colext/blob/main/java_pipeline/common/src/main/java/cz/vut/fit/domainradar/CollectorConfig.java) for a list of accepted configuration keys. No type checks are performed!
+For the pipeline components implemented in Java, the configuration exchange JSON will be transformed into the Java Properties file accepted by the components. No type checks are performed!
 
 The configuration exchange object has two top-level properties. Its `collector` section maps to the collector-specific configuration keys, as defined in the file linked above. Omit the `collectors.` prefix from the key. \
 The `system` section can be used to directly manipulate the options for the Kafka Consumers/Producers. 
@@ -169,7 +169,7 @@ producer.compression.type=zstd
 
 ## Configuration format (Python-based data pipeline components)
 
-For the pipeline components implemented in Python (stages marked by _F_ in [kafka-pipeline.pdf](img/kafka-pipeline.pdf)), the configuration exchange JSON will be transformed into the TOML configuration file accepted by the components. See [**the configuration example**](https://github.com/nesfit/domainradar-colext/blob/main/python_pipeline/config.example.toml) for a list of accepted configuration keys. Generally, the collector-specific options will be properties of a top-level object named by the collector; its embedded dictionary `faust` passes options directly to the underlying framework.
+For the pipeline components implemented in Python, the configuration exchange JSON will be transformed into the TOML configuration file accepted by the components. Generally, the collector-specific options will be properties of a top-level object named by the collector; its embedded dictionary `faust` passes options directly to the underlying framework.
 
 The configuration exchange JSON will be mapped 1:1 to the target TOML (using [tomli-w](https://pypi.org/project/tomli-w)). However, the `connection` section and the `app_id` keys will be omitted! 
 
