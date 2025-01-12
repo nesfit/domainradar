@@ -231,7 +231,7 @@ configure_sql() {
 make_log4j_configs() {
     local dir="$INFRA_DIR/client_properties"
     local template="$dir/log4j2_template.xml"
-    local services=(geo_asn nerd tls)
+    local services=(geo_asn nerd tls qradar)
 
     for service in "${services[@]}"
     do
