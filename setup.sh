@@ -17,6 +17,8 @@ STORE_RAW_DATA_IN_POSTGRES=0
 # The public-facing hostname of the Kafka brokers (% will be replaced by a number)
 BROKER_PUBLIC_HOSTNAME="kafka%.example.com"
 
+# NOTE: If you want to use the | character, you need to escape it and include an escaped backslash
+#       Example: ["WEBUI_ADMIN_PASSWORD"]="my\\\|password" sets the password to my|password
 declare -A config_options=( 
     # -> Collector options <-
     # An API token for CESNET's NERD. Leave empty to disable NERD (i.e. the collector 
@@ -198,7 +200,7 @@ replace() {
     local value="$3"
 
     # Replace $$KEY$$ with the corresponding value
-    sed -i "s/\\\$\\\$${key}\\\$\\\$/${value}/g" "$file"
+    sed -i "s|\\\$\\\$${key}\\\$\\\$|${value}|g" "$file"
 }
 
 replace_placeholders() {
@@ -277,12 +279,16 @@ config_options["KAFKA_PUBLIC_HOSTNAME"]="${BROKER_PUBLIC_HOSTNAME/\%/1}"
 # Check if all properties are configured
 check_properties
 # Replace placeholders in infra
+echo "1) Replacing placeholders"
 replace_placeholders "$INFRA_DIR"
 # Create log4j2 configurations for Java-based collectors
+echo "2) Creating Log4J2 configs"
 make_log4j_configs
 # If STORE_RAW_DATA_IN_POSTGRES is 0, modify the SQL init script in infra
+echo "3) Reconfiguring SQL scripts"
 configure_sql
 
+echo "4) Generating secrets"
 # Backup the secrets generation directory
 cp -r "$SECRETS_GENERATION_DIR" "$working_dir/_bck_secrets_gen"
 # Replace placeholders in the generate_secrets.sh script
@@ -301,8 +307,10 @@ rm -rf "$SECRETS_GENERATION_DIR"
 mv "$working_dir/_bck_secrets_gen" "$SECRETS_GENERATION_DIR"
 
 # Copy the config_manager host socket script
+echo "5) Copying the config_manager host script"
 cp "$COLEXT_DIR/python/config_manager/config_manager_daemon.py" "$INFRA_DIR/config-manager-daemon.py"
-chmod +x $INFRA_DIR/config-manager-daemon.py
+chmod +x "$INFRA_DIR/config-manager-daemon.py"
 
 # Build container images
+echo "6) Building container images"
 ./build_images.sh
