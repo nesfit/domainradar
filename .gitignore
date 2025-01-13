@@ -1,6 +1,6 @@
 secrets/
 .vscode/
-generated_passwords
+used_passwords
 colext/
 infra/
 input/
