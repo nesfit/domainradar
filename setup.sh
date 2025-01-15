@@ -70,6 +70,17 @@ declare -A config_options=(
     ["MAX_PARALLELISM_MERGER"]="5"
     ["MAX_PARALLELISM_EXTRACTOR"]="10"
     ["MAX_PARALLELISM_CLASSIFIER"]="5"
+
+    # -> Memory limits <-
+    ["COLLECTORS_PY_MEM_LIMIT"]="512mb"
+    ["COLLECTORS_JAVA_CPC_MEM_LIMIT"]="1024mb"
+    ["EXTRACTOR_MEM_LIMIT"]="1024mb"
+    ["CLASSIFIER_MEM_LIMIT"]="2gb"
+    ["KAFKA_MEM_LIMIT"]="2gb"
+    ["POSTGRES_MEM_LIMIT"]="2gb"
+    ["FLINK_JOBMANAGER_MEM_PROCESS_SIZE"]="512m"   # This is Flink format, note the missing 'b'
+    ["FLINK_TASKMANAGER_MEM_PROCESS_SIZE"]="2048m" # This is Flink format, note the missing 'b'
+    ["FLINK_TASKMANAGER_CONTAINER_MEM_LIMIT"]="2560mb"
 )
 
 # Passwords for private keys, keystores and database users.
