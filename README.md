@@ -1,196 +1,74 @@
 # DomainRadar
 
-This repository contains a Docker Compose setup for a complete DomainRadar testing environment. It includes a Kafka cluster using encrypted communication, the prefilter, the pipeline components (collectors, data merger, feature extractor, classifier), a PostgreSQL database, a MongoDB database, Kafka Connect configured to push data to them, and a web UI for Kafka.
+DomainRadar is an ML-based system for the identification of malicious domain names using information collected from external sources.
 
-The [*compose.yml*](./compose.yml) Compose file provides several services assigned to several profiles.
+This repository contains pieces of [documentation](./docs/) and resources for quickly setting up a complete DomainRadar demonstration environment. The actual system components are located in sister repositories:
 
-## Services with exposed ports
+- [domainradar-input](https://github.com/nesfit/domainradar-input) contains the Loader & Pre-filter component,
+- [domainradar-colext](https://github.com/nesfit/domainradar-colext) contains the distributed data processing pipeline components for collection and feature extractor,
+- [domainradar-clf](https://github.com/nesfit/domainradar-clf) contains the classifiers,
+- [domainradar-ui](https://github.com/nesfit/domainradar-ui) contains the user web interface,
+- [domainradar-infra](https://github.com/nesfit/domainradar-infra) contains a _template_ for a Docker Compose setup, including service configurations and database initialization scripts.
 
-- _kafka1_, the first Kafka broker:
-    - Exposed on 31013 (through the `kafka-outside-world` network).
-    - Internally, clients use `kafka1:9093`.
-    - SSL authentication, see below.
-- _kafka-ui_, [Kafbat UI](https://github.com/kafbat/kafka-ui), a web UI for Kafka: 31000
-    - No authentication is used!
-- _kafka-connect_, the Kafka Connect REST API: 31002
-    - No authentication (will be changed).
-    - Included in two flavors: _kafka-connect-full_ and _kafka-connect-without-postgres_.
-- _postgres_, the PostgreSQL database: 31010
-    - Password (SCRAM) authentication (probably will be changed, see below).
-- _mongo_, the MongoDB Community database: 31011
-    - Password (SCRAM) authentication (probably will be changed, see below).
+## System requirements
 
-### Other services
+The _minimum_ requirements for the host machine are:
+- 16 GB of RAM (available to DomainRadar)
+- 64 GB of storage
+- 4 CPU cores 
 
-- _initializer_ invokes the [wait_for_startup](kafka_scripts/wait_for_startup.sh) script that exits only when successfuly connected to Kafka, and the [prepare_topics](kafka_scripts/prepare_topics.sh) script that creates or updates the topics.
-- _config-manager_ is the configuration manager. It requires the [config_manager_daemon](../src/config_manager/config_manager_daemon.py) script to be executed on the host machine first.
-- _standalone-input_ can be executed to load domain names into the system.
-- _mongo-domains-refresher_ and _mongo-raw-data-refresher_ execute the [run_periodically](mongo_aggregations/run_periodically.sh) script to run MongoDB aggregations.
+We recommend to run the system with at least 24 GB of RAM and 8 CPU cores.
 
-## Preparation
+The demonstration environment was tested using:
+- Debian 12.2.0
+- Docker Engine 27.0.3
+- Docker Compose 2.29.7
 
-### Data
+Any reasonably recent version of Docker (and Compose) should work. The setup was not tested with other container platforms, though it seems to work on rootful Podman _with SELinux disabled_.
 
-- Obtain your GeoLite2 City & ASN databases and place them in [*geoip\_data*](./geoip_data/).
-- Obtain a NERD token and place it in your [*client\_properties/nerd.properties*](./client_properties/nerd.properties).
+## Setting up
 
-### Security
+This repo contains the following scripts you may want to use:
 
-You need to generate a CA, broker certificates and client certificates. Ensure that you have OpenSSL and Java installed (JRE is fine). Then you can run:
+- [options.sh](./options.sh) defines the paths and target branches for the repos mentioned above. It is sourced by the other scripts and does nothing on its own.
+- [pull.sh](./pull.sh) clones the repos.
+- [clean.sh](./clean.sh) removes the source code and/or the built container images.
 
-```bash
-./generate_secrets.sh
-``` 
+At the top of the main [setup.sh](./setup.sh) script, you'll find a number of **configuration options** (with comments) for the target environment. You can also specify various **internal passwords and secrets** (such as passwords for the database users), though when you leave those blank, they will be generated for you.
 
-You can also use the included Docker image:
+The script expects all the DomainRadar repos to be cloned at paths set in [options.sh](options.sh) (which can be done using [pull.sh](./pull.sh)).
 
-```bash
-./generate_secrets_docker.sh
-```
+> [!IMPORTANT]
+> Don't forget to pull the other repositories **and** to set the configuration options before running the setup script.
 
-You can change the certificates' validity and passwords by setting the variables at the top of the *generate_secrets.sh* script. If you do, you have to also change the passwords in the _envs/kafka\*.env_ files, the files in _client\_properties/_ for all the clients and _connect\_properties/10\_main.properties_.
+The script:
 
-For the love of god, if you use the generated keys and certificates outside of development, change the passwords and store the CA somewhere safe.
+- Creates a backup of the `INFRA_DIR` directory with the template (allowing the script to be re-executed later, e.g., to set up an environment with a different configuration).  
+- Generates passwords and secrets (if not specified explicitly in the setup script).
+- Verifies that all configuration items are filled in.  
+- Populates the configuration template files in the `INFRA_DIR` directory.  
+- Creates a local certificate authority and a set of certificates used to authenticate clients when communicating with Apache Kafka servers.  
+- Builds container images for all the services.
 
-The _db_ directory contains configuration for the database, including user passwords. Be sure to change them when actually deploying this somewhere. The passwords must be set accordingly in the services that use them, i.e., Kafka Connect (*connect_properties*), the prefilter, the UI, the ingestion controller (not yet included).
+> [!NOTE]
+> The setup script is interactive. If it detects that it has been executed before, it asks the user whether to overwrite the previous content. You can use the `-y` to skip this.
 
-### Component images
-
-You can use a provided script to clone and build all the images at once.
-
-Alternatively, you can build the individual images by hand:
-
-1. Clone the [domainradar-colext](https://github.com/nesfit/domainradar-colext/) repo. Follow its README to build the images!
-2. Clone the [domainradar-input](https://github.com/nesfit/domainradar-input) repo and use [*dockerfiles/prefilter.Dockerfile*](./dockerfiles/prefilter.Dockerfile) to build it. Tag it with `domrad/loader`.
-3. Clone the [domainradar-ui](https://github.com/nesfit/domainradar-ui) repo and use the Dockerfile included in it to build the webui image. Tag it with `domrad/webui`.
-
-### Scaling
-
-You can adjust the scaling of the components by changing the variables in [.env](./.env). Note that to achieve parallelism, the scaling factor must be less or equal to the partition count of the component's input topic. Modify the partitioning accordingly in [prepare_topics](./kafka_scripts/prepare_topics.sh) and set the `UPDATE_EXISTING_TOPICS` environment variable of the _initializer_ service to `1` to update an existing deployment. Note that you can only _increase_ the number of topics (but there can be more partitions than instances).
-
-## Usage (full system)
-
-Start the system using:
+After completing the script, you can navigate to your `INFRA_DIR` and initialize the Apache Kafka server and DomainRadar using the following commands:
 
 ```bash
-docker compose --profile full up
+docker compose up -d kafka1 postgres
+docker compose up --build initializer
+docker compose up -d
 ```
 
-Remember to **always** specify the profile in **all** compose commands. Otherwise, weird things are going to happen.
+You can verify the successful startup of the DomainRadar tool by accessing the web interface at [http://localhost:31003/](http://localhost:31003/) or the Kafka server management interface at [http://localhost:31000/](http://localhost:31000/) (default settings). The login credentials for both interfaces are configuration items set by the setup script.
 
-You can also add the `-d` flag to run the services in the background. The [*follow-component-logs.sh*](./follow-component-logs.sh) script can then be used to “reattach” to the output of all the pipeline components, without the Kafka cluster.
-
-All the included configuration files are set up for the default single-broker Kafka configuration. To use the two-brokers configuration or even extend it to more nodes, follow the instructions in the [Adding a Kafka node](#adding-a-kafka-node) section.
-
-### Using the configuration manager
-
-The configuration manager is not included in the `full` profile. To use it, first refer to its [README](../src/config_manager/README.md) to see how the script should be set up on the host. Then add the `configmanager` profile to the Compose commands:
+Later on, you can start and stop DomainRadar using the following commands:
 
 ```bash
-docker compose --profile full --profile configmanager up -d config-manager
+docker compose up -d  # Start
+docker compose down   # Stop
 ```
 
-## Usage (standalone)
-
-The “standalone” configurations do not include PostgreSQL and the MongoDB data aggregations. The standalone input controller can be used to send data for processing. First, start the system:
-
-```bash
-docker compose --profile col up -d
-```
-
-The standalone input controller can be then executed as follows:
-
-```bash
-docker compose --profile col run --rm -v /file/to/load.txt:/app/file.txt standalone-input load -d -y /app/file.txt
-```
-
-The command mounts the file from `/file/to/load.txt` to the container, where the controller is executed to load this file in the direct mode (i.e. it expects one domain name per line) and with no interaction. The container is deleted after it finishes. 
-
-The `col` profile only starts the collectors. To enable feature extraction, use the `colext` profile instead.
-
-## Kafka
-
-Should you need to connect to Kafka from the outside world, the broker is published to the host machine on port **31013**. You **must** modify your */etc/hosts* file to point `kafka1` to 127.0.0.1 and connect through this name.
-
-Mind that in the default configuration, client authentication is **required** so you have to use one of the generated client certificates. You can also modify the broker configuration to allow plaintext communication (see below).
-
-### Using Kafka with two nodes
-
-The override Compose file changes the setup so that Kafka cluster of two nodes is used. They both run in the combined mode where each instance works both as a controller and as a broker. Node-client communication enforces the use of SSL with client authentication; inter-controller and inter-broker communication are done in plaintext over a separate network (`kafka-inter-node-network`) to reduce overhead.
-
-Before using this setup, you should change the `connection.brokers` setting in all the *client\_properties/\*.toml* client configuration files! 
-
-For some reason, the two-node setup tends to break randomly. I suggest to first start the Kafka nodes, then the initializer, and if it succeeds, start the rest of the services. You can use the *compose_cluster.sh* script which is just a shorthand for `docker compose -f compose.yml -f compose.cluster-override.yml [args]`.
-
-```bash
-# If some services were started before, remove them
-./compose_cluster.sh down
-# Start the databases
-./compose_cluster.sh up -d postgres mongo
-# Start the cluster
-./compose_cluster.sh up -d kafka1 kafka2
-# Initialize the cluster
-# If this fails, try restarting the cluster
-./compose_cluster.sh up initializer
-# Start the pipeline services
-./service_runner.sh cluster up
-```
-
-### Adding a Kafka node
-
-If you want to test with more Kafka nodes, you have to:
-- In *generate_secrets.sh*, change `NUM_BROKERS` and add an entry to `BROKER_PASSWORDS`; generate the new certificate(s).
-- Add a new _envs/kafka**N**.env_ file:
-    - change the IP and hostname in `KAFKA_LISTENERS` and `KAFKA_ADVERTISED_LISTENERS`,
-    - change the paths in `KAFKA_SSL_KEYSTORE_LOCATION` and password in `KAFKA_SSL_KEYSTORE_PASSWORD`.
-- Add the new internal broker IPs to `KAFKA_CONTROLLER_QUORUM_VOTERS` in **all** the *kafkaN.env* files.
-- Add a new service to the Compose file:
-    - copy an existing definition,
-    - change the IP address in the service.
-- Update the `BOOTSTRAP` environment variable for the _initializer_ service (in the Compose file).
-- Update the `KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS` env. variable for the _kafka-ui_ service (in the Compose file).
-- Update the `-s` argument in all the component services (in the Compose file).
-- Preferrably (though the clients should manage with just one bootstrap server):
-    - Update the *.toml* configurations for the Python clients (in the *client\_properties/* directory).
-    - Update the `bootstrap.servers` property in _connect\_properties/10\_main.properties_.
-
-### Using SSL for inter-broker communication
-
-If you want to use SSL in inter-broker communication as well (for some reason), it should suffice to change `KAFKA_LISTENER_SECURITY_PROTOCOL_MAP` in all *envs/kafkaN.env* files. Set the controller and internal listener to use SSL: `CONTROLLER:SSL,INTERNAL:SSL`. Not tested in the current config.
-
-### Enabling plaintext node-client communication
-
-If you want to enable plaintext node-client communication, you can switch the listener to plaintext. Modify the `KAFKA_LISTENER_SECURITY_PROTOCOL_MAP` in the *envs/kafka1.env* file to contain `CLIENTS:PLAINTEXT` instead of `CLIENTS:SSL`. This only applies to the _internal_ clients, i.e. the ones connected to the isolated `kafka-clients` network. For this to have effect on the “outside world” clients that connect through the forwarded port 31010, instead modiy `CLIENTSOUT`.
-
-To disable client authentication, change `KAFKA_SSL_CLIENT_AUTH` to `none` or `requested`.
-
-## Debugging the Java components
-
-If you need to debug the Java-based apps, you can enable the Java Debug Wire Protocol. Add this to the target service:
-
-```yaml
-environment:
-    - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,address=0.0.0.0:8111,server=y,suspend=n
-ports:
-    - "8111:8111"
-```
-
-Adjust the host port if you need. In IntelliJ Idea, you can then add a [Remote JVM Debug](https://www.jetbrains.com/help/idea/tutorial-remote-debug.html#create-run-configurations) run configuration.
-
-## Included files breakdown
-
-- *client_properties* contains the configuration files for the pipeline components.
-- *connect_plugins* is used to load plugins to the Kafka Connect instance. Note that the MongoDB connector is added to the container at build.
-- *connect_properties* contains the definitions of the Kafka Connect connectors.
-- *db* contains the initialization scripts and configuration files for the database management systems. The passwords for the users, set only during the first execution of the services, are defined in the _.secrets_ files.
-- *dockerfiles* contains supplementary Dockerfiles:
-    - *initializer.Dockerfile* builds a simple container with the two scripts from *kafka_scripts/*,
-    - *generate_secrets.Dockerfile* builds a container with the JRE to run the secrets generation procedure. It is used through the [generate_secrets_docker](./generate_secrets_docker.sh) script.
-    - *kafka_connect.Dockerfile* builds a container based on [domrad/kafka-connect](../src/java_pipeline/connect.Dockerfile) that contains the MongoDB connector.
-    - *run_aggregation.Dockerfile* builds a container with the Mongo shell to execute the aggregations.
-- *envs* contains the environment variables that control the settings of Kafka and Kafbat UI.
-- *extractor_data* contains the data files for the feature extractor, created in the DomainRadar research.
-- *geoip_data* contains the [MaxMind GeoLite2 databases](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data).
-- *kafka_scripts* contains the scripts for the initializer.
-- *misc* contains a list of 400,000 domain names for testing, an SQL that inserts 200 domain names to PostgreSQL for testing, and the configuration for the secrets generation procedure.
-- *mongo_aggregations* contains, well, various example MongoDB aggregations and a common script that executes them to create a view.
+> [!TIP]
+> See the README in [domainradar-infra](https://github.com/nesfit/domainradar-infra/) for more information on the infrastructure files layout, the initialization script, the services and the available advanced configuration options.
