@@ -50,14 +50,27 @@ declare -A config_options=(
     ["COMPOSE_BASE_NAME"]="domainradar"
     
     # -> Scaling options (number of component instances to run) <-
-    ["COLLECTORS_PY_SCALE"]="5"
+    ["COLLECTORS_PY_SCALE"]="1"
     ["COLLECTORS_JAVA_CPC_SCALE"]="1"
-    ["EXTRACTOR_SCALE"]="2"
+    ["EXTRACTOR_SCALE"]="1"
     ["CLASSIFIER_SCALE"]="1"
     # We recommend keeping the scale (number of Docker services) at 1 and increasing
     # the parallelism (number of task slots) to match MAX_PARALLELISM_MERGER
     ["FLINK_TASKMANAGER_SCALE"]="1"
     ["FLINK_PARALLELISM"]="5"
+
+    # -> Intra-component parallelism (number of threads/worker processes) <-
+    ["WORKERS_ZONE"]="32"
+    ["WORKERS_DNS"]="32"
+    ["WORKERS_RDAP_DN"]="32"
+    ["WORKERS_RDAP_IP"]="32"
+    ["WORKERS_RTT"]="32"
+    ["THREADS_QRADAR"]="8"
+    ["THREADS_GEO_ASN"]="32"
+    ["THREADS_NERD"]="2"
+    ["THREADS_TLS"]="32"
+    ["WORKERS_EXTRACTOR"]="16"
+    ["WORKERS_CLASSIFIER"]="2"
 
     # -> Kafka partitioning <-
     # These options control the number of partitions set for the Kafka topics used by
@@ -72,13 +85,13 @@ declare -A config_options=(
     ["MAX_PARALLELISM_CLASSIFIER"]="5"
 
     # -> Memory limits <-
-    ["COLLECTORS_PY_MEM_LIMIT"]="512mb"
+    ["COLLECTORS_PY_MEM_LIMIT"]="2048mb"
     ["COLLECTORS_JAVA_CPC_MEM_LIMIT"]="1024mb"
-    ["EXTRACTOR_MEM_LIMIT"]="1024mb"
+    ["EXTRACTOR_MEM_LIMIT"]="2048mb"
     ["CLASSIFIER_MEM_LIMIT"]="2gb"
     ["KAFKA_MEM_LIMIT"]="2gb"
     ["POSTGRES_MEM_LIMIT"]="2gb"
-    ["FLINK_JOBMANAGER_MEM_PROCESS_SIZE"]="512m"   # This is Flink format, note the missing 'b'
+    ["FLINK_JOBMANAGER_MEM_PROCESS_SIZE"]="1536m"   # This is Flink format, note the missing 'b'
     ["FLINK_TASKMANAGER_MEM_PROCESS_SIZE"]="2048m" # This is Flink format, note the missing 'b'
     ["FLINK_TASKMANAGER_CONTAINER_MEM_LIMIT"]="2560mb"
 )
