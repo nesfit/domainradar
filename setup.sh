@@ -48,6 +48,25 @@ declare -A config_options=(
     ["ID_PREFIX"]="domrad"
     # An identifier for the Compose instance.
     ["COMPOSE_BASE_NAME"]="domainradar"
+
+    # -> Kafka Connect <-
+    # Interval for polling new input data from PostgreSQL (poll.interval.ms)
+    ["KC_IN_POLL_INTERVAL_MS"]="1000"
+    # The maximum number of rows fetched in a single batch from PostgreSQL (batch.max.rows).
+    ["KC_IN_BATCH_SIZE"]="50"
+    # The size of each batch of records to be sent to PostgreSQL (batch.size).
+    ["KC_OUT_BATCH_SIZE"]="25"
+    # The maximum number of parallel tasks the connector is allowed to create (tasks.max).
+    ["KC_TASKS_MAX"]="1"
+    # Allows the connector to record processing errors (errors.log.enable).
+    ["KC_LOG_ENABLE"]="true"
+    # The delay (in milliseconds) between retry attempts when errors occur.
+    # This value is used for both the maximum error retry delay (errors.retry.delay.max.ms) and the retry backoff delay (retry.backoff.ms).
+    ["KC_RETRY_DELAY"]="5000"
+    # The maximum number of retry attempts the connector will make upon encountering errors (max.retries).
+    ["KC_MAX_RETRIES"]="3"
+    # The maximum number of records returned in a single poll by the Kafka consumer (consumer.max.poll.records).
+    ["KC_MAX_POLL_RECORDS"]="50"
     
     # -> Scaling options (number of component instances to run) <-
     ["COLLECTORS_PY_SCALE"]="1"
@@ -60,16 +79,16 @@ declare -A config_options=(
     ["FLINK_PARALLELISM"]="5"
 
     # -> Intra-component parallelism (number of threads/worker processes) <-
-    ["WORKERS_ZONE"]="32"
-    ["WORKERS_DNS"]="32"
-    ["WORKERS_RDAP_DN"]="32"
-    ["WORKERS_RDAP_IP"]="32"
-    ["WORKERS_RTT"]="32"
+    ["WORKERS_ZONE"]="16"
+    ["WORKERS_DNS"]="16"
+    ["WORKERS_RDAP_DN"]="16"
+    ["WORKERS_RDAP_IP"]="16"
+    ["WORKERS_RTT"]="16"
     ["THREADS_QRADAR"]="8"
     ["THREADS_GEO_ASN"]="32"
     ["THREADS_NERD"]="2"
     ["THREADS_TLS"]="32"
-    ["WORKERS_EXTRACTOR"]="16"
+    ["WORKERS_EXTRACTOR"]="4"
     ["WORKERS_CLASSIFIER"]="2"
 
     # -> Kafka partitioning <-
@@ -87,7 +106,7 @@ declare -A config_options=(
     # -> Memory limits <-
     ["COLLECTORS_PY_MEM_LIMIT"]="2048mb"
     ["COLLECTORS_JAVA_CPC_MEM_LIMIT"]="1024mb"
-    ["EXTRACTOR_MEM_LIMIT"]="2048mb"
+    ["EXTRACTOR_MEM_LIMIT"]="1536mb"
     ["CLASSIFIER_MEM_LIMIT"]="2gb"
     ["KAFKA_MEM_LIMIT"]="2gb"
     ["POSTGRES_MEM_LIMIT"]="2gb"
