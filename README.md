@@ -61,6 +61,13 @@ docker compose up --build initializer
 docker compose up -d
 ```
 
+> [!IMPORTANT]
+> Right now, database updates must be triggered manually by calling the `process_collection_results` and `process_classification_results` stored procedures in regular intervals (ca each minute). This can be done, for example, via cron on the host machine, as demonstrated in the following crontab entry. In future, this will be added as a standalone Docker service.
+
+```cron
+* * * * * docker compose -f [INFRA_DIR]/compose.yml exec -T --user postgres postgres psql -d domainradar -c "CALL process_collection_results();" && docker compose -f [INFRA_DIR]/compose.yml exec -T --user postgres postgres psql -d domainradar -c "CALL process_classification_results();"
+```
+
 You can verify the successful startup of the DomainRadar tool by accessing the web interface at [http://localhost:31003/](http://localhost:31003/) or the Kafka server management interface at [http://localhost:31000/](http://localhost:31000/) (default settings). The login credentials for both interfaces are configuration items set by the setup script.
 
 Later on, you can start and stop DomainRadar using the following commands:
