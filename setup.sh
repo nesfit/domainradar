@@ -196,13 +196,17 @@ fill_passwords() {
         if ask_yes_no "A passwords file already exists. Overwrite?"; then
             rm "$USED_PASSWORDS_FILE"
         else
-            stop_on_error
+            while read key pass; do
+                passwords["$key"]="$pass"
+                echo "Loaded existing password $key"
+            done <"$USED_PASSWORDS_FILE"
         fi
     fi
 
     for key in "${!passwords[@]}"; do
         if [[ -z ${passwords["$key"]} ]]; then
             passwords["$key"]="$(generate_random_password)"
+            echo "Generated password $key"
         fi
 
         printf "$key\t${passwords[$key]}\n" >> "$USED_PASSWORDS_FILE"
