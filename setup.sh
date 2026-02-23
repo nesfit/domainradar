@@ -28,6 +28,37 @@ declare -A config_options=(
     # (i.e. the collector will run but not consume requests).
     ["QRADAR_URL"]=""
     ["QRADAR_TOKEN"]=""
+    # An API token for the AbuseIPDB service. Leave emptry to disable AbuseIPDB (i.e. the collector
+    # will run but produce empty responses).
+    ["ABUSEIPDB_TOKEN"]=""
+    # An API token for the VirusTotal service. Leave emptry to disable VirusTotal (i.e. the collector
+    # will run but produce empty responses).
+    ["VIRUSTOTAL_TOKEN"]=""
+    # An API token for the Pulsedive service. Leave emptry to disable Pulsedive (i.e. the collector
+    # will run but produce empty responses).
+    ["PULSEDIVE_TOKEN"]=""
+    # An API token for the Hybrid-analysis service. Leave emptry to disable Hybrid-analysis
+    # (i.e. the collector will run but produce empty responses).
+    ["HYBRIDANALYSIS_TOKEN"]=""
+    # An API token for the Greynoise service. Leave emptry to disable Greynoise (i.e. the collector
+    # will run but produce empty responses).
+    ["GREYNOISE_TOKEN"]=""
+    # An API token and account ID for the Cloudflare Radar service. Leave emptry to disable
+    # Cloudflare Radar (i.e. the collector will run but produce empty responses).
+    ["CLOUDFLARE_RADAR_TOKEN"]=""
+    ["CLOUDFLARE_RADAR_ACCOUNTID"]=""
+    # An API token for the Opentip Kaspersky service. Leave emptry to disable Opentip Kaspersky
+    # (i.e. the collector will run but produce empty responses).
+    ["OPENTIP_KASPERSKY_TOKEN"]=""
+    # An API token for the Threatfox abuse.ch service. Leave emptry to disable Threatfox (i.e. the collector
+    # will run but produce empty responses).
+    ["THREATFOX_TOKEN"]=""
+    # An API token for the CriminalIP service. Leave emptry to disable CriminalIP (i.e. the collector
+    # will run but produce empty responses).
+    ["CRIMINALIP_TOKEN"]=""
+    # An API token for the Google Safe Browsing service. Leave emptry to disable Google Safe Browsing
+    # (i.e. the collector will run but produce empty responses).
+    ["GOOGLE_SAFE_BROWSING_TOKEN"]=""
     
     # -> DomainRadar Web UI <-
     ["WEBUI_ADMIN_USERNAME"]="admin"
@@ -280,7 +311,25 @@ configure_sql() {
 make_log4j_configs() {
     local dir="$INFRA_DIR/client_properties"
     local template="$dir/log4j2_template.xml"
-    local services=(geo_asn nerd tls qradar)
+    local services=(
+        geo_asn
+        nerd
+        tls
+        qradar
+        abuseipdb
+        cloudflare_radar
+        criminalip
+        fortiguard
+        google_safe_browsing
+        greynoise
+        hybridanalysis
+        opentip_kaspersky
+        project_honeypot
+        pulsedive
+        threatfox
+        urlvoid
+        virustotal
+    )
 
     for service in "${services[@]}"
     do
